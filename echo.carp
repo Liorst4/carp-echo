@@ -12,16 +12,20 @@
 
 (defn ignore-result [a] ())
 
+(defn echo-arguments [first-argument-index last-argument-index]
+      (do
+	(let [counter first-argument-index]
+	  (while (< counter last-argument-index)
+		 (do
+		   (IO.print (System.get-arg counter))
+		   (IO.print " ")
+		   (ignore-result (safe-add counter 1 &counter)))))
+	(IO.print "\n")
+	0))
+
 (defn main []
       (let [argc (get-args-len)]
 	(if (< 1 argc)
-	  (do
-	    (let [counter 1]
-	      (while (< counter argc)
-		     (do
-		       (IO.print (System.get-arg counter))
-		       (IO.print " ")
-		       (ignore-result (safe-add counter 1 &counter)))))
-	    (IO.print "\n")
-	    0)
+	  ;; TODO: Parse flags
+	  (echo-arguments 1 argc)
 	  (show-usage))))
