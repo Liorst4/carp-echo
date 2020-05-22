@@ -10,6 +10,8 @@
 	(IO.error "Usage: echo <arguments>\n")
         1))
 
+(defn ignore-result [a] ())
+
 (defn main []
       (let [argc (get-args-len)]
 	(if (< 1 argc)
@@ -19,11 +21,7 @@
 		     (do
 		       (IO.print (System.get-arg counter))
 		       (IO.print " ")
-		       ;; TODO: Is the `if` necessary
-		       (if (safe-add counter 1 &counter)
-			 ()
-			 ())
-		       ())))
+		       (ignore-result (safe-add counter 1 &counter)))))
 	    (IO.print "\n")
 	    0)
 	  (show-usage))))
