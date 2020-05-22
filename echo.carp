@@ -12,7 +12,11 @@
 
 (defn ignore-result [a] ())
 
-(defn echo-arguments [first-argument-index last-argument-index]
+;; TODO: Support escape characters
+
+(defn echo-arguments [first-argument-index
+		      last-argument-index
+		      echo-newline]
       (do
 	(let [counter first-argument-index]
 	  (while (< counter last-argument-index)
@@ -20,12 +24,14 @@
 		   (IO.print (System.get-arg counter))
 		   (IO.print " ")
 		   (ignore-result (safe-add counter 1 &counter)))))
-	(IO.print "\n")
+	(if echo-newline
+	  (IO.print "\n")
+	  ())
 	0))
 
 (defn main []
       (let [argc (get-args-len)]
 	(if (< 1 argc)
 	  ;; TODO: Parse flags
-	  (echo-arguments 1 argc)
+	  (echo-arguments 1 argc true)
 	  (show-usage))))
