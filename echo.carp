@@ -1,12 +1,22 @@
 (use System)
 (use IO)
+(use Int)
+(use Bool)
+(load "SafeInt.carp")
 
 (defn show-usage []
-      (IO.error "Usage: echo <argument>\n"))
+      (IO.error "Usage: echo <arguments>\n"))
 
 (defn main []
       (let [argc (get-args-len)]
-	(if (= 2 argc)
-	  (let [argument (get-arg 1)]
-	    (IO.print argument))
+	(if (< 1 argc)
+	  (let [counter 1]
+	    (while (< counter argc)
+		   (do
+		     (IO.print (System.get-arg counter))
+		     ;; TODO: Is the `if` necessary
+		     (if (safe-add counter 1 &counter)
+		       ()
+		       ())
+		     ())))
 	  (show-usage))))
