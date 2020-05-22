@@ -6,7 +6,9 @@
 (load "SafeInt.carp")
 
 (defn show-usage []
-      (IO.error "Usage: echo <arguments>\n"))
+      (do
+	(IO.error "Usage: echo <arguments>\n")
+        1))
 
 (defn main []
       (let [argc (get-args-len)]
@@ -22,5 +24,6 @@
 			 ()
 			 ())
 		       ())))
-	    (IO.print "\n"))
+	    (IO.print "\n")
+	    0)
 	  (show-usage))))
