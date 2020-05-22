@@ -1,0 +1,12 @@
+(use System)
+(use IO)
+
+(defn show-usage []
+      (IO.error "Usage: echo <argument>\n"))
+
+(defn main []
+      (let [argc (get-args-len)]
+	(if (= 2 argc)
+	  (let [argument (get-arg 1)]
+	    (IO.print argument))
+	  (show-usage))))
