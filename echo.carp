@@ -11,14 +11,16 @@
 (defn main []
       (let [argc (get-args-len)]
 	(if (< 1 argc)
-	  (let [counter 1]
-	    (while (< counter argc)
-		   (do
-		     (IO.print
-		       &(String.concat &[@(System.get-arg counter) @" "]))
-		     ;; TODO: Is the `if` necessary
-		     (if (safe-add counter 1 &counter)
-		       ()
-		       ())
-		     ())))
+	  (do
+	    (let [counter 1]
+	      (while (< counter argc)
+		     (do
+		       (IO.print
+			 &(String.concat &[@(System.get-arg counter) @" "]))
+		       ;; TODO: Is the `if` necessary
+		       (if (safe-add counter 1 &counter)
+			 ()
+			 ())
+		       ())))
+	    (IO.print "\n"))
 	  (show-usage))))
