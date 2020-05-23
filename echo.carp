@@ -22,9 +22,14 @@
 	    ;; TODO: check overflows
 	    (let [next-char (String.char-at s (inc current-index))
 		  replacement-char (cond
+				     (= \a next-char) (Char.from-int 7)
+				     (= \b next-char) (Char.from-int 8)
 				     (= \t next-char) (Char.from-int 9)
 				     (= \n next-char) (Char.from-int 10)
-				     ;; TODO: support \a \c \e \f \r \v \0NNN \xHH
+				     (= \v next-char) (Char.from-int 11)
+				     (= \f next-char) (Char.from-int 12)
+				     (= \r next-char) (Char.from-int 13)
+				     ;; TODO: support \c \e \0NNN \xHH
 				     next-char)]
 	      ;; TODO: Can this be done with less mallocs?
 	      (String.append
