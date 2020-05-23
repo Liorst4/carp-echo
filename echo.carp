@@ -6,11 +6,6 @@
 (use Char)
 (load "SafeInt.carp")
 
-(defn show-usage []
-      (do
-	(IO.error "Usage: echo <arguments>\n")
-        1))
-
 (defn ignore-result [a] ())
 
 ;; TODO: Return a Maybe String
@@ -57,12 +52,9 @@
 		   (ignore-result (safe-add counter 1 &counter)))))
 	(if echo-newline
 	  (IO.print "\n")
-	  ())
-	0))
+	  ())))
 
 (defn main []
       (let [argc (get-args-len)]
-	(if (< 1 argc)
-	  ;; TODO: Parse flags
-	  (echo-arguments 1 argc true true)
-	  (show-usage))))
+	;; TODO: Parse flags
+	(echo-arguments 1 argc true true)))
