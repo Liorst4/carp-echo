@@ -3,6 +3,7 @@
 (use Int)
 (use Bool)
 (use String)
+(use Char)
 (load "SafeInt.carp")
 
 (defn show-usage []
@@ -12,16 +13,41 @@
 
 (defn ignore-result [a] ())
 
-;; TODO: Support escape characters
+;; TODO: Return a Maybe String
+(defn escape-string-inner [s current-index]
+      (if (>= current-index (String.length s))
+	@""
+	(let [current-char (String.char-at s current-index)]
+	  (if (= current-char \\)
+	    ;; TODO: check overflows
+	    (let [next-char (String.char-at s (inc current-index))
+		  replacement-char (cond
+				     (= \t next-char) (Char.from-int 9)
+				     (= \n next-char) (Char.from-int 10)
+				     ;; TODO: support \a \c \e \f \r \v \0NNN \xHH
+				     next-char)]
+	      ;; TODO: Can this be done with less mallocs?
+	      (String.append
+		&(String.from-chars &[replacement-char])
+		&(escape-string-inner s (inc (inc current-index)))))
+	    (String.append
+	      &(String.from-chars &[current-char])
+	      &(escape-string-inner s (inc current-index)))))))
+
+(defn escape-string [s]
+      (escape-string-inner s 0))
 
 (defn echo-arguments [first-argument-index
 		      last-argument-index
-		      echo-newline]
+		      echo-newline
+		      escape-arguments]
       (do
 	(let [counter first-argument-index]
 	  (while (< counter last-argument-index)
 		 (do
-		   (IO.print (System.get-arg counter))
+		   (if escape-arguments
+		     (IO.print &(escape-string (System.get-arg counter)))
+		     (IO.print (System.get-arg counter)))
 		   (IO.print " ")
 		   (ignore-result (safe-add counter 1 &counter)))))
 	(if echo-newline
@@ -33,5 +59,5 @@
       (let [argc (get-args-len)]
 	(if (< 1 argc)
 	  ;; TODO: Parse flags
-	  (echo-arguments 1 argc true)
+	  (echo-arguments 1 argc true true)
 	  (show-usage))))
