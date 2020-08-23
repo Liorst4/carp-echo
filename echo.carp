@@ -4,6 +4,7 @@
 (use Bool)
 (use String)
 (use Char)
+(use Maybe)
 (load "SafeInt.carp")
 
 (defn ignore-result [a] ())
@@ -55,6 +56,11 @@
 	  ())))
 
 (defn main []
-      (let [argc (get-args-len)]
-	;; TODO: Parse flags
-	(echo-arguments 1 argc true true)))
+      (let [argc (get-args-len)
+	    flag_arguments []]
+	(do
+	  (echo-arguments
+	    (+ 1 (Array.length &flag_arguments))
+	    argc
+	    (Maybe.nothing? &(Array.index-of &flag_arguments &@"-n"))
+	    (Maybe.just? &(Array.index-of &flag_arguments &@"-e"))))))
