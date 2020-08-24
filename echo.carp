@@ -42,9 +42,8 @@
 		   (when (>= counter last-argument-index)
 		     (break))
 		   (IO.print " "))))
-	(if echo-newline
-	  (IO.print "\n")
-	  ())))
+	(when echo-newline
+	  (IO.print "\n"))))
 
 (defn main []
       (let [argc (System.get-args-len)
