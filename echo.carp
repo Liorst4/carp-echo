@@ -1,3 +1,5 @@
+(Project.config "title" "echo")
+
 (defn escape-string [string-ref]
       (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
 	    escaped-string-length 0
