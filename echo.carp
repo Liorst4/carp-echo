@@ -38,8 +38,10 @@
 		   (if escape-arguments
 		     (IO.print &(escape-string (System.get-arg counter)))
 		     (IO.print (System.get-arg counter)))
-		   (IO.print " ")
-		   (set! counter (inc counter)))))
+		   (set! counter (inc counter))
+		   (when (>= counter last-argument-index)
+		     (break))
+		   (IO.print " "))))
 	(if echo-newline
 	  (IO.print "\n")
 	  ())))
