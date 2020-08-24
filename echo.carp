@@ -50,10 +50,26 @@
 
 (defn main []
       (let [argc (System.get-args-len)
-	    flag_arguments []]
+	    add-newline true
+	    escape-characters false
+	    first-non-flag-argument-index 0]
 	(do
+
+	  ;; Find flags
+	  (let [argument-index 1]
+	    (do
+	      (while (< argument-index argc)
+		     (do
+		       (cond
+			 (= (System.get-arg argument-index) "-e") (set! escape-characters true)
+			 (= (System.get-arg argument-index) "-E") (set! escape-characters false)
+			 (= (System.get-arg argument-index) "-n") (set! add-newline false)
+			 (break))
+		       (set! argument-index (inc argument-index))))
+	      (set! first-non-flag-argument-index argument-index)))
+
 	  (echo-arguments
-	    (+ 1 (Array.length &flag_arguments))
+	    first-non-flag-argument-index
 	    argc
-	    (Maybe.nothing? &(Array.index-of &flag_arguments &@"-n"))
-	    (Maybe.just? &(Array.index-of &flag_arguments &@"-e"))))))
+	    add-newline
+	    escape-characters))))
