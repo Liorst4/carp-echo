@@ -1,7 +1,3 @@
-(load "SafeInt.carp")
-
-(defn ignore-result [a] ())
-
 ;; TODO: Return a Maybe String
 (defn escape-string-inner [s current-index]
       (if (>= current-index (String.length s))
@@ -43,7 +39,7 @@
 		     (IO.print &(escape-string (System.get-arg counter)))
 		     (IO.print (System.get-arg counter)))
 		   (IO.print " ")
-		   (ignore-result (Int.safe-add counter 1 &counter)))))
+		   (set! counter (inc counter)))))
 	(if echo-newline
 	  (IO.print "\n")
 	  ())))
