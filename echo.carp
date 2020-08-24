@@ -1,13 +1,15 @@
 (defn escape-string [string-ref]
       (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
 	    escaped-string-length 0
-	    string-ref-index 0]
+	    string-ref-index 0
+	    string-ref-length (String.length string-ref)]
 	(do
-	  (while (< string-ref-index (String.length string-ref))
-		 (let [current-char (String.char-at string-ref string-ref-index)]
-		   (if (= current-char \\)
+	  (while (< string-ref-index string-ref-length)
+		 (let [current-char (String.char-at string-ref string-ref-index)
+		       next-char-index (inc string-ref-index)]
+		   (if (and (= current-char \\) (< next-char-index string-ref-length))
 		     ;; Escape sequence
-		     (let [next-char (String.char-at string-ref (inc string-ref-index)) ;; TODO: Check for overflows
+		     (let [next-char (String.char-at string-ref next-char-index)
 				     replacement-char (cond
 							(= \a next-char) (Char.from-int 7)
 							(= \b next-char) (Char.from-int 8)
