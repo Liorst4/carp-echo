@@ -1,31 +1,35 @@
-;; TODO: Return a Maybe String
-(defn escape-string-inner [s current-index]
-      (if (>= current-index (String.length s))
-	@""
-	(let [current-char (String.char-at s current-index)]
-	  (if (= current-char \\)
-	    ;; TODO: check overflows
-	    (let [next-char (String.char-at s (inc current-index))
-		  replacement-char (cond
-				     (= \a next-char) (Char.from-int 7)
-				     (= \b next-char) (Char.from-int 8)
-				     (= \t next-char) (Char.from-int 9)
-				     (= \n next-char) (Char.from-int 10)
-				     (= \v next-char) (Char.from-int 11)
-				     (= \f next-char) (Char.from-int 12)
-				     (= \r next-char) (Char.from-int 13)
-				     ;; TODO: support \c \e \0NNN \xHH
-				     next-char)]
-	      ;; TODO: Can this be done with less mallocs?
-	      (String.append
-		&(String.from-chars &[replacement-char])
-		&(escape-string-inner s (inc (inc current-index)))))
-	    (String.append
-	      &(String.from-chars &[current-char])
-	      &(escape-string-inner s (inc current-index)))))))
+(defn escape-string [string-ref]
+      (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
+	    escaped-string-length 0
+	    string-ref-index 0]
+	(do
+	  (while (< string-ref-index (String.length string-ref))
+		 (let [current-char (String.char-at string-ref string-ref-index)]
+		   (if (= current-char \\)
+		     ;; Escape sequence
+		     (let [next-char (String.char-at string-ref (inc string-ref-index)) ;; TODO: Check for overflows
+				     replacement-char (cond
+							(= \a next-char) (Char.from-int 7)
+							(= \b next-char) (Char.from-int 8)
+							(= \t next-char) (Char.from-int 9)
+							(= \n next-char) (Char.from-int 10)
+							(= \v next-char) (Char.from-int 11)
+							(= \f next-char) (Char.from-int 12)
+							(= \r next-char) (Char.from-int 13)
+							;; TODO: support \c \e \0NNN \xHH
+							next-char)]
+		       (do
+			 (String.string-set! &escaped-string escaped-string-length replacement-char)
+			 (set! string-ref-index (+ string-ref-index 2))
+			 (set! escaped-string-length (inc escaped-string-length))))
 
-(defn escape-string [s]
-      (escape-string-inner s 0))
+		     ;; Normal character
+		     (do
+		       (String.string-set! &escaped-string escaped-string-length current-char)
+		       (set! string-ref-index (inc string-ref-index))
+		       (set! escaped-string-length (inc escaped-string-length))))))
+
+	  (String.slice &escaped-string 0 escaped-string-length))))
 
 (defn echo-arguments [first-argument-index
 		      last-argument-index
@@ -58,6 +62,7 @@
 	      (while (< argument-index argc)
 		     (do
 		       (cond
+			 ;; TODO: Support -en -ne etc
 			 (= (System.get-arg argument-index) "-e") (set! escape-characters true)
 			 (= (System.get-arg argument-index) "-E") (set! escape-characters false)
 			 (= (System.get-arg argument-index) "-n") (set! add-newline false)
