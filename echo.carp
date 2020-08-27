@@ -1,5 +1,9 @@
 (Project.config "title" "echo")
 
+;; TODO: Make this a safe function
+(defn get-arg [n]
+      (Maybe.unsafe-from (StaticArray.nth &System.args n)))
+
 (defn escape-string [string-ref]
       (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
 	    escaped-string-length 0
@@ -56,8 +60,8 @@
 	  (while (< counter last-argument-index)
 		 (do
 		   (if escape-arguments
-		     (IO.print &(escape-string (System.get-arg counter)))
-		     (IO.print (System.get-arg counter)))
+		     (IO.print &(escape-string &(get-arg counter)))
+		     (IO.print &(get-arg counter)))
 		   (set! counter (inc counter))
 		   (when (>= counter last-argument-index)
 		     (break))
@@ -66,7 +70,7 @@
 	  (IO.print "\n"))))
 
 (defn main []
-      (let [argc (System.get-args-len)
+      (let [argc (StaticArray.length &System.args)
 	    add-newline true
 	    escape-characters false
 	    first-non-flag-argument-index 0]
@@ -79,9 +83,9 @@
 		     (do
 		       (cond
 			 ;; TODO: Support -en -ne --help etc
-			 (= (System.get-arg argument-index) "-e") (set! escape-characters true)
-			 (= (System.get-arg argument-index) "-E") (set! escape-characters false)
-			 (= (System.get-arg argument-index) "-n") (set! add-newline false)
+			 (= &(get-arg argument-index) "-e") (set! escape-characters true)
+			 (= &(get-arg argument-index) "-E") (set! escape-characters false)
+			 (= &(get-arg argument-index) "-n") (set! add-newline false)
 			 (break))
 		       (set! argument-index (inc argument-index))))
 	      (set! first-non-flag-argument-index argument-index)))
