@@ -60,9 +60,15 @@
 		   (set! result (Int.bit-or (Int.bit-shift-left result 4) (Char.to-int (Char.copy n)))))
 	  (Char.from-int result))))
 
-(defn oct-digit? [c] (and (>= c \0) (<= c \8)))
+(defn oct-digit? [c] (and (>= c \0) (<= c \7)))
 
-(defn fold-to-oct [arr] \A) ;; TODO: Implement
+(defn fold-to-oct [arr]
+      (let [result 0
+	    nibbles (Array.endo-map &(fn [x] (Char.from-int (- (Char.to-int x) (Char.to-int \0)))) arr)]
+	(do
+	  (foreach [n &nibbles]
+		   (set! result (Int.bit-or (Int.bit-shift-left result 3) (Char.to-int (Char.copy n)))))
+	  (Char.from-int result))))
 
 (defn escape-string [string-ref]
       (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
