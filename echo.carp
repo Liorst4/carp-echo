@@ -4,6 +4,60 @@
 (defn get-arg [n]
       (Maybe.unsafe-from (StaticArray.nth &System.args n)))
 
+(defn parse-number [string-ref string-ref-length begin-index max-length digit? fold]
+      (let [digits []]
+	(do
+	  ;; Collect digits
+	  (while true
+		 (let [i (Array.length &digits)]
+		   (do
+		     (unless (< i max-length)
+		       (break))
+		     (unless (< (+ i begin-index) string-ref-length)
+		       (break))
+		     (let [item (String.char-at string-ref (+ i begin-index))]
+		       (if (digit? item)
+			 (Array.push-back! &digits item)
+			 (break))))))
+
+	  (if (Array.empty? &digits)
+	    (Maybe.Nothing)
+	    (Maybe.Just (let [amount-of-items-processed (Array.length &digits)
+			      number (fold &digits)]
+			  (Pair.init number amount-of-items-processed)))))))
+
+(defn hex-digit? [c]
+      (or
+       (and
+	 (>= c \0)
+	 (<= c \9))
+       (or
+	 (and
+	   (>= c \a)
+	   (<= c \f))
+	 (and
+	   (>= c \A)
+	   (<= c \F)))))
+
+(defn char-to-hex-nibble [c]
+      (cond
+	(and
+	  (>= c \0)
+	  (<= c \9)) (- (Char.to-int c) (Char.to-int \0))
+	(and
+	  (>= c \A)
+	  (<= c \F)) (+ 10 (- (Char.to-int c) (Char.to-int \A)))
+	(and
+	  (>= c \a)
+	  (<= c \f)) (+ 10 (- (Char.to-int c) (Char.to-int \a)))
+	0)) ;; TODO Use Maybe?
+
+(defn fold-to-hex [arr] \A) ;; TODO: Implement
+
+(defn oct-digit? [c] (and (>= c \0) (<= c \8)))
+
+(defn fold-to-oct [arr] \A) ;; TODO: Implement
+
 (defn escape-string [string-ref]
       (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
 	    escaped-string-length 0
@@ -26,8 +80,31 @@
 					      (IO.print &(String.slice &escaped-string 0 escaped-string-length))
 					      (System.exit 0))
 
-			   ;; TODO (= \0 next-char) ()
-			   ;; TODO (= \x next-char) ()
+			   (= \x next-char) (let [parse-result (parse-number
+						      string-ref
+						      string-ref-length
+						      (inc next-char-index)
+						      2
+						      hex-digit?
+						      fold-to-hex)]
+					      (when (Maybe.just? &parse-result)
+						(let [number-and-addition (Maybe.unsafe-from parse-result)]
+						  (do
+						    (set! escaped-string-addition (Char.copy (Pair.a &number-and-addition)))
+						    (set! string-ref-index-addition (+ 2 (Int.copy (Pair.b &number-and-addition))))))))
+
+			   (= \0 next-char) (let [parse-result (parse-number
+						      string-ref
+						      string-ref-length
+						      (inc next-char-index)
+						      3
+						      oct-digit?
+						      fold-to-oct)]
+					      (when (Maybe.just? &parse-result)
+						(let [number-and-addition (Maybe.unsafe-from parse-result)]
+						  (do
+						    (set! escaped-string-addition (Char.copy (Pair.a &number-and-addition)))
+						    (set! string-ref-index-addition (+ 2 (Int.copy (Pair.b &number-and-addition))))))))
 
 			   ;; Single character
 			   (let [replacement-char (cond
