@@ -26,31 +26,20 @@
 			      number (fold digits)]
 			  (Pair.init number amount-of-items-processed)))))))
 
+(defn in-range? [v minimum maximum]
+      (and (>= v minimum) (<= v maximum)))
+
 (defn hex-digit? [c]
-      (or
-       (and
-	 (>= c \0)
-	 (<= c \9))
-       (or
-	 (and
-	   (>= c \a)
-	   (<= c \f))
-	 (and
-	   (>= c \A)
-	   (<= c \F)))))
+      (or (in-range? c \0 \9)
+	  (or (in-range? c \A \F)
+	      (in-range? c \a \f))))
 
 (defn char-to-hex-nibble [c]
       (cond
-	(and
-	  (>= c \0)
-	  (<= c \9)) (- (Char.to-int c) (Char.to-int \0))
-	(and
-	  (>= c \A)
-	  (<= c \F)) (+ 10 (- (Char.to-int c) (Char.to-int \A)))
-	(and
-	  (>= c \a)
-	  (<= c \f)) (+ 10 (- (Char.to-int c) (Char.to-int \a)))
-	0)) ;; TODO Use Maybe?
+	(in-range? c \0 \9) (- (Char.to-int c) (Char.to-int \0))
+        (in-range? c \A \F) (+ 10 (- (Char.to-int c) (Char.to-int \A)))
+        (in-range? c \a \f) (+ 10 (- (Char.to-int c) (Char.to-int \a)))
+       0)) ;; TODO Use Maybe?
 
 (defn fold-to-hex [arr]
       (let [result 0
@@ -60,7 +49,8 @@
 		   (set! result (Int.bit-or (Int.bit-shift-left result 4) (Char.to-int (Char.copy n)))))
 	  (Char.from-int result))))
 
-(defn oct-digit? [c] (and (>= c \0) (<= c \7)))
+(defn oct-digit? [c]
+      (in-range? c \0 \7))
 
 (defn fold-to-oct [arr]
       (let [result 0
