@@ -1,5 +1,8 @@
 (Project.config "title" "echo")
 
+(system-include "stdio.h")
+(register putchar (Fn [Int] Int) "putchar")
+
 ;; TODO: Make this a safe function
 (defn get-arg [n]
       (Maybe.unsafe-from (StaticArray.nth &System.args n)))
@@ -60,8 +63,12 @@
 		   (set! result (Int.bit-or (Int.bit-shift-left result 3) (Char.to-int (Char.copy n)))))
 	  (Char.from-int result))))
 
+(defn print-bytes [bytes]
+      (foreach [byte bytes]
+	       (let [x (putchar (Int.copy byte))] ()))) ;; TODO: Do without let
+
 (defn escape-string [string-ref]
-      (let [escaped-string (String.allocate (String.length string-ref) (Char.from-int 1)) ;; Can't put 0 because strlen is used in assertions
+      (let [escaped-string (the (Array Int) (Array.allocate (String.length string-ref)))
 	    escaped-string-length 0
 	    string-ref-index 0
 	    string-ref-length (String.length string-ref)]
@@ -69,7 +76,7 @@
 	  (while (< string-ref-index string-ref-length)
 		 (let [current-char (String.char-at string-ref string-ref-index)
 		       next-char-index (inc string-ref-index)
-		       escaped-string-addition current-char
+		       escaped-string-addition (Char.to-int current-char)
 		       string-ref-index-addition 1]
 		   (do
 		     (when (and (= current-char \\) (< next-char-index string-ref-length))
@@ -79,7 +86,7 @@
 
 			   ;; Produce no further output
 			   (= \c next-char) (do
-					      (IO.print &(String.slice &escaped-string 0 escaped-string-length))
+					      (print-bytes &(Array.slice &escaped-string 0 escaped-string-length))
 					      (System.exit 0))
 
 			   (= \x next-char) (let [parse-result (parse-number
@@ -92,7 +99,7 @@
 					      (when (Maybe.just? &parse-result)
 						(let [number-and-addition (Maybe.unsafe-from parse-result)]
 						  (do
-						    (set! escaped-string-addition (Char.copy (Pair.a &number-and-addition)))
+						    (set! escaped-string-addition (Char.to-int (Char.copy (Pair.a &number-and-addition))))
 						    (set! string-ref-index-addition (+ 2 (Int.copy (Pair.b &number-and-addition))))))))
 
 			   (= \0 next-char) (let [parse-result (parse-number
@@ -105,18 +112,18 @@
 					      (when (Maybe.just? &parse-result)
 						(let [number-and-addition (Maybe.unsafe-from parse-result)]
 						  (do
-						    (set! escaped-string-addition (Char.copy (Pair.a &number-and-addition)))
+						    (set! escaped-string-addition (Char.to-int (Char.copy (Pair.a &number-and-addition))))
 						    (set! string-ref-index-addition (+ 2 (Int.copy (Pair.b &number-and-addition))))))))
 
 			   ;; Single character
 			   (let [replacement-char (cond
-						    (= \a next-char) (Maybe.Just (Char.from-int 7))
-						    (= \b next-char) (Maybe.Just (Char.from-int 8))
-						    (= \t next-char) (Maybe.Just (Char.from-int 9))
-						    (= \n next-char) (Maybe.Just (Char.from-int 10))
-						    (= \v next-char) (Maybe.Just (Char.from-int 11))
-						    (= \f next-char) (Maybe.Just (Char.from-int 12))
-						    (= \r next-char) (Maybe.Just (Char.from-int 13))
+						    (= \a next-char) (Maybe.Just 7)
+						    (= \b next-char) (Maybe.Just 8)
+						    (= \t next-char) (Maybe.Just 9)
+						    (= \n next-char) (Maybe.Just 10)
+						    (= \v next-char) (Maybe.Just 11)
+						    (= \f next-char) (Maybe.Just 12)
+						    (= \r next-char) (Maybe.Just 13)
 						    (Maybe.Nothing))]
 			     ;; TODO: Don't use Maybe
 			     (when (Maybe.just? &replacement-char)
@@ -124,11 +131,11 @@
 				 (set! escaped-string-addition (Maybe.unsafe-from replacement-char))
 				 (set! string-ref-index-addition 2)))))))
 
-		     (String.string-set! &escaped-string escaped-string-length escaped-string-addition)
+		     (Array.aset! &escaped-string escaped-string-length escaped-string-addition)
 		     (set! string-ref-index (+ string-ref-index string-ref-index-addition))
 		     (set! escaped-string-length (inc escaped-string-length)))))
 
-	  (String.slice &escaped-string 0 escaped-string-length))))
+	  (Array.slice &escaped-string 0 escaped-string-length))))
 
 (defn echo-arguments [first-argument-index
 		      last-argument-index
@@ -139,7 +146,7 @@
 	  (while (< counter last-argument-index)
 		 (do
 		   (if escape-arguments
-		     (IO.print &(escape-string &(get-arg counter)))
+		     (print-bytes &(escape-string &(get-arg counter)))
 		     (IO.print &(get-arg counter)))
 		   (set! counter (inc counter))
 		   (when (>= counter last-argument-index)
