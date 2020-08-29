@@ -8,6 +8,13 @@
 (system-include "stdio.h")
 (register putchar (Fn [Int] Int) "putchar")
 
+(system-include "unistd.h")
+(register getopt (Fn [Int (Ptr (Ptr CChar)) (Ptr CChar)] Int) "getopt")
+(register optarg (Ptr CChar) "optarg")
+(register optind Int "optind")
+(register opterr Int "opterr")
+(register optopt Int "optopt")
+
 ;; TODO: Make this a safe function
 (defn get-arg [n]
       (Maybe.unsafe-from (nth &System.args n)))
@@ -164,25 +171,25 @@
       (let [argc (length &System.args)
 	    add-newline true
 	    escape-characters false
-	    first-non-flag-argument-index 0]
+	    c-args (the (Array (Ptr CChar)) [])]
 	(do
 
-	  ;; Find flags
-	  (let [argument-index 1]
-	    (do
-	      (while (< argument-index argc)
-		     (do
-		       (cond
-			 ;; TODO: Support -en -ne --help etc
-			 (= &(get-arg argument-index) "-e") (set! escape-characters true)
-			 (= &(get-arg argument-index) "-E") (set! escape-characters false)
-			 (= &(get-arg argument-index) "-n") (set! add-newline false)
-			 (break))
-		       (set! argument-index (inc argument-index))))
-	      (set! first-non-flag-argument-index argument-index)))
+	  ;; Parse flags
+	  (StaticArray.foreach [arg &System.args] (push-back! &c-args (cstr arg)))
+	  (push-back! &c-args NULL)
+	  (let [opt 0
+		argv (raw c-args)]
+	    (while (do
+		     (set! opt (getopt argc argv (cstr "enE")))
+		     (not (= opt -1)))
+		   (cond
+		     (= opt (Char.to-int \e)) (set! escape-characters true)
+		     (= opt (Char.to-int \E)) (set! escape-characters false)
+		     (= opt (Char.to-int \n)) (set! add-newline false)
+		     (break))))
 
 	  (echo-arguments
-	    first-non-flag-argument-index
+	    optind
 	    argc
 	    add-newline
 	    escape-characters))))
