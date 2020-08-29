@@ -1,31 +1,36 @@
 (Project.config "title" "echo")
 
+(use StaticArray)
+(use String)
+(use Array)
+(use IO)
+
 (system-include "stdio.h")
 (register putchar (Fn [Int] Int) "putchar")
 
 ;; TODO: Make this a safe function
 (defn get-arg [n]
-      (Maybe.unsafe-from (StaticArray.nth &System.args n)))
+      (Maybe.unsafe-from (nth &System.args n)))
 
 (defn parse-number [string-ref string-ref-length begin-index max-length digit? fold]
       (let [digits []]
 	(do
 	  ;; Collect digits
 	  (while true
-		 (let [i (Array.length &digits)]
+		 (let [i (length &digits)]
 		   (do
 		     (unless (< i max-length)
 		       (break))
 		     (unless (< (+ i begin-index) string-ref-length)
 		       (break))
-		     (let [item (String.char-at string-ref (+ i begin-index))]
+		     (let [item (char-at string-ref (+ i begin-index))]
 		       (if (digit? item)
-			 (Array.push-back! &digits item)
+			 (push-back! &digits item)
 			 (break))))))
 
-	  (if (Array.empty? &digits)
+	  (if (empty? &digits)
 	    (Maybe.Nothing)
-	    (Maybe.Just (let [amount-of-items-processed (Array.length &digits)
+	    (Maybe.Just (let [amount-of-items-processed (length &digits)
 			      number (fold digits)]
 			  (Pair.init number amount-of-items-processed)))))))
 
@@ -46,7 +51,7 @@
 
 (defn fold-to-hex [arr]
       (let [result 0
-	    nibbles (Array.endo-map &(fn [x] (Char.from-int (char-to-hex-nibble x))) arr)]
+	    nibbles (endo-map &(fn [x] (Char.from-int (char-to-hex-nibble x))) arr)]
 	(do
 	  (foreach [n &nibbles]
 		   (set! result (Int.bit-or (Int.bit-shift-left result 4) (Char.to-int (Char.copy n)))))
@@ -57,7 +62,7 @@
 
 (defn fold-to-oct [arr]
       (let [result 0
-	    nibbles (Array.endo-map &(fn [x] (Char.from-int (- (Char.to-int x) (Char.to-int \0)))) arr)]
+	    nibbles (endo-map &(fn [x] (Char.from-int (- (Char.to-int x) (Char.to-int \0)))) arr)]
 	(do
 	  (foreach [n &nibbles]
 		   (set! result (Int.bit-or (Int.bit-shift-left result 3) (Char.to-int (Char.copy n)))))
@@ -68,25 +73,25 @@
 	       (let [x (putchar (Int.copy byte))] ()))) ;; TODO: Do without let
 
 (defn escape-string [string-ref]
-      (let [escaped-string (the (Array Int) (Array.allocate (String.length string-ref)))
+      (let [escaped-string (the (Array Int) (Array.allocate (length string-ref)))
 	    escaped-string-length 0
 	    string-ref-index 0
-	    string-ref-length (String.length string-ref)]
+	    string-ref-length (length string-ref)]
 	(do
 	  (while (< string-ref-index string-ref-length)
-		 (let [current-char (String.char-at string-ref string-ref-index)
+		 (let [current-char (char-at string-ref string-ref-index)
 		       next-char-index (inc string-ref-index)
 		       escaped-string-addition (Char.to-int current-char)
 		       string-ref-index-addition 1]
 		   (do
 		     (when (and (= current-char \\) (< next-char-index string-ref-length))
 		       ;; Escape sequence
-		       (let [next-char (String.char-at string-ref next-char-index)]
+		       (let [next-char (char-at string-ref next-char-index)]
 			 (cond
 
 			   ;; Produce no further output
 			   (= \c next-char) (do
-					      (print-bytes &(Array.slice &escaped-string 0 escaped-string-length))
+					      (print-bytes &(slice &escaped-string 0 escaped-string-length))
 					      (System.exit 0))
 
 			   (= \x next-char) (let [parse-result (parse-number
@@ -131,11 +136,11 @@
 				 (set! escaped-string-addition (Maybe.unsafe-from replacement-char))
 				 (set! string-ref-index-addition 2)))))))
 
-		     (Array.aset! &escaped-string escaped-string-length escaped-string-addition)
+		     (aset! &escaped-string escaped-string-length escaped-string-addition)
 		     (set! string-ref-index (+ string-ref-index string-ref-index-addition))
 		     (set! escaped-string-length (inc escaped-string-length)))))
 
-	  (Array.slice &escaped-string 0 escaped-string-length))))
+	  (slice &escaped-string 0 escaped-string-length))))
 
 (defn echo-arguments [first-argument-index
 		      last-argument-index
@@ -147,16 +152,16 @@
 		 (do
 		   (if escape-arguments
 		     (print-bytes &(escape-string &(get-arg counter)))
-		     (IO.print &(get-arg counter)))
+		     (print &(get-arg counter)))
 		   (set! counter (inc counter))
 		   (when (>= counter last-argument-index)
 		     (break))
-		   (IO.print " "))))
+		   (print " "))))
 	(when echo-newline
-	  (IO.print "\n"))))
+	  (print "\n"))))
 
 (defn main []
-      (let [argc (StaticArray.length &System.args)
+      (let [argc (length &System.args)
 	    add-newline true
 	    escape-characters false
 	    first-non-flag-argument-index 0]
