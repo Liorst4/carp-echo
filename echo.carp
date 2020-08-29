@@ -17,13 +17,13 @@
 	(do
 	  ;; Collect digits
 	  (while true
-		 (let [i (length &digits)]
-		   (do
-		     (unless (< i max-length)
-		       (break))
-		     (unless (< (+ i begin-index) string-ref-length)
-		       (break))
-		     (let [item (char-at string-ref (+ i begin-index))]
+		 (let [digits-length (length &digits)
+		       string-ref-index (+ digits-length begin-index)]
+		   (if (or
+			 (>= digits-length max-length)
+			 (>= string-ref-index string-ref-length))
+		     (break)
+		     (let [item (char-at string-ref string-ref-index)]
 		       (if (digit? item)
 			 (push-back! &digits item)
 			 (break))))))
